@@ -4,8 +4,20 @@ import re
 from bs4 import BeautifulSoup
 from collections import Counter
 import json
+import nltk
+from nltk.stem import PorterStemmer
+from nltk.tokenize import word_tokenize
 
 app = Flask(__name__)
+
+# Initialize stemmer
+stemmer = PorterStemmer()
+
+# Download NLTK data if not already downloaded
+try:
+    nltk.data.find('tokenizers/punkt')
+except LookupError:
+    nltk.download('punkt')
 
 
 @app.route('/', methods=['GET', 'POST'])
@@ -13,19 +25,31 @@ def index():
     analysis_results = None
     article_title = ""
     error_message = None
+    category_suggestions = None
+    category_search = ""
 
     if request.method == 'POST':
-        article_title = request.form.get('article_title', '').strip()
-        if article_title:
-            try:
-                analysis_results = analyze_wikipedia_article(article_title)
-            except Exception as e:
-                error_message = f"Error analyzing article: {str(e)}"
+        if 'article_title' in request.form:
+            article_title = request.form.get('article_title', '').strip()
+            if article_title:
+                try:
+                    analysis_results = analyze_wikipedia_article(article_title)
+                except Exception as e:
+                    error_message = f"Error analyzing article: {str(e)}"
+        elif 'category_search' in request.form:
+            category_search = request.form.get('category_search', '').strip()
+            if category_search:
+                try:
+                    category_suggestions = search_wikipedia_categories(category_search)
+                except Exception as e:
+                    error_message = f"Error searching categories: {str(e)}"
 
     return render_template('index.html',
                            analysis_results=analysis_results,
                            article_title=article_title,
-                           error_message=error_message)
+                           error_message=error_message,
+                           category_suggestions=category_suggestions,
+                           category_search=category_search)
 
 
 @app.route('/category/<category_name>', methods=['GET'])
@@ -180,15 +204,40 @@ def analyze_wikipedia_article(title):
                   'each', 'few', 'more', 'most', 'some', 'such', 'no', 'nor', 'too',
                   'very', 'one', 'every', 'least', 'less', 'many', 'now', 'ever', 'also'}
     
-    words = [word.lower() for word in re.findall(r'\b\w+\b', text)
+    # Tokenize and stem words
+    raw_words = [word.lower() for word in re.findall(r'\b\w+\b', text)
              if word.lower() not in stop_words and len(word) > 1]
     
-    # Get word frequencies
-    word_freq = Counter(words)
-    common_words = word_freq.most_common(10)
+    # Apply stemming to combine similar words (e.g., plurals)
+    stemmed_words = []
+    stem_to_word_map = {}  # Map stems back to most common original word
+    
+    for word in raw_words:
+        stem = stemmer.stem(word)
+        stemmed_words.append(stem)
+        
+        # Keep track of original words for each stem
+        if stem in stem_to_word_map:
+            stem_to_word_map[stem].append(word)
+        else:
+            stem_to_word_map[stem] = [word]
+    
+    # Get word frequencies based on stems
+    stem_freq = Counter(stemmed_words)
+    
+    # Map stems back to most common original word form
+    word_freq = {}
+    for stem, count in stem_freq.items():
+        # Find the most common original word for this stem
+        original_words = stem_to_word_map[stem]
+        most_common_word = Counter(original_words).most_common(1)[0][0]
+        word_freq[most_common_word] = count
+    
+    # Get common words
+    common_words = Counter(word_freq).most_common(10)
     
     # Calculate cumulative frequency
-    total_words = len(words)
+    total_words = len(stemmed_words)
     cumulative_freq = []
     running_sum = 0
     
@@ -199,7 +248,8 @@ def analyze_wikipedia_article(title):
             'word': word,
             'count': count,
             'frequency': freq,
-            'cumulative_frequency': running_sum
+            'cumulative_frequency': running_sum,
+            'variants': list(set(stem_to_word_map[stemmer.stem(word)]))  # Include word variants
         })
 
     return {
@@ -209,10 +259,40 @@ def analyze_wikipedia_article(title):
         'sentence_count': sentence_count,
         'avg_word_length': round(avg_word_length, 2),
         'common_words': common_words,
-        'word_freq': dict(word_freq),
+        'word_freq': word_freq,
         'cumulative_freq': cumulative_freq,
         'excerpt': text[:500] + '...' if len(text) > 500 else text
     }
+
+
+def search_wikipedia_categories(search_term):
+    """Search for Wikipedia categories matching the search term"""
+    url = "https://en.wikipedia.org/w/api.php"
+    
+    params = {
+        "action": "query",
+        "list": "search",
+        "srsearch": f"Category:{search_term}",
+        "srnamespace": 14,  # Category namespace
+        "srlimit": 10,
+        "format": "json"
+    }
+    
+    response = requests.get(url, params=params)
+    data = response.json()
+    
+    categories = []
+    if 'query' in data and 'search' in data['query']:
+        for result in data['query']['search']:
+            # Extract just the category name without the "Category:" prefix
+            category_name = result['title'].replace('Category:', '')
+            categories.append({
+                'name': category_name,
+                'snippet': result.get('snippet', ''),
+                'url': f"/category/{category_name}"
+            })
+    
+    return categories
 
 
 if __name__ == '__main__':

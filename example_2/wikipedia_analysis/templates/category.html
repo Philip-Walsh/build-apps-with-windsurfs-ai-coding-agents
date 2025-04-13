@@ -294,7 +294,19 @@
                                             {% for item in cumulative_freq %}
                                             <tr>
                                                 <td>{{ loop.index }}</td>
-                                                <td><strong>{{ item.word }}</strong></td>
+                                                <td>
+                                                    <strong>{{ item.word }}</strong>
+                                                    {% if item.variants|length > 1 %}
+                                                    <small class="text-muted d-block">
+                                                        Variants: 
+                                                        {% for variant in item.variants %}
+                                                            {% if variant != item.word %}
+                                                                {{ variant }}{% if not loop.last %}, {% endif %}
+                                                            {% endif %}
+                                                        {% endfor %}
+                                                    </small>
+                                                    {% endif %}
+                                                </td>
                                                 <td>{{ item.count }}</td>
                                                 <td>{{ "%.4f"|format(item.frequency) }}</td>
                                                 <td>{{ "%.4f"|format(item.cumulative_frequency) }}</td>
@@ -422,7 +434,8 @@
                         word: "{{ item.word }}",
                         count: {{ item.count }},
                         frequency: {{ item.frequency }},
-                        cumulative_frequency: {{ item.cumulative_frequency }}
+                        cumulative_frequency: {{ item.cumulative_frequency }},
+                        variants: {{ item.variants|tojson }}
                     });
                 {% endif %}
             {% endfor %}
@@ -514,6 +527,14 @@
                     
                     // Add tooltip with frequency info
                     wordElement.title = `${item.word}: ${item.count} occurrences (${(item.frequency * 100).toFixed(2)}%)`;
+                    
+                    // Add variants to tooltip if available
+                    if (item.variants && item.variants.length > 1) {
+                        const otherVariants = item.variants.filter(v => v !== item.word);
+                        if (otherVariants.length > 0) {
+                            wordElement.title += `\nVariants: ${otherVariants.join(', ')}`;
+                        }
+                    }
                     
                     // Add to container
                     wordCloudContainer.appendChild(wordElement);
