@@ -6,98 +6,266 @@
     <title>Wikipedia Analysis Tool</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
     <style>
+        :root {
+            --glass-bg: rgba(255, 255, 255, 0.15);
+            --glass-border: rgba(255, 255, 255, 0.2);
+            --glass-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37);
+            --text-color: #fff;
+            --accent-color: #007bff;
+            --accent-hover: #0056b3;
+        }
+        
         body {
-            background-color: #f8f9fa;
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+            color: var(--text-color);
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            min-height: 100vh;
             padding-top: 2rem;
         }
-        .card {
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        
+        .glass-card {
+            background: var(--glass-bg);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border: 1px solid var(--glass-border);
+            border-radius: 15px;
+            box-shadow: var(--glass-shadow);
+            padding: 25px;
+            margin-bottom: 2rem;
+        }
+        
+        .header {
+            text-align: center;
+            margin-bottom: 3rem;
+        }
+        
+        .header h1 {
+            font-weight: 700;
+            font-size: 2.5rem;
+            margin-bottom: 1rem;
+            text-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+        }
+        
+        .header p {
+            font-size: 1.2rem;
+            opacity: 0.9;
+        }
+        
+        .form-control, .btn {
+            border-radius: 10px;
+            padding: 12px 20px;
+            font-size: 1rem;
+        }
+        
+        .form-control {
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid var(--glass-border);
+            color: var(--text-color);
+        }
+        
+        .form-control:focus {
+            background: rgba(255, 255, 255, 0.15);
+            border-color: var(--accent-color);
+            color: var(--text-color);
+            box-shadow: 0 0 0 0.25rem rgba(0, 123, 255, 0.25);
+        }
+        
+        .form-control::placeholder {
+            color: rgba(255, 255, 255, 0.6);
+        }
+        
+        .btn-primary {
+            background-color: var(--accent-color);
+            border-color: var(--accent-color);
+            box-shadow: 0 4px 15px rgba(0, 123, 255, 0.3);
+            transition: all 0.3s ease;
+        }
+        
+        .btn-primary:hover {
+            background-color: var(--accent-hover);
+            border-color: var(--accent-hover);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0, 123, 255, 0.4);
+        }
+        
+        .nav-tabs {
+            border-bottom: 1px solid var(--glass-border);
             margin-bottom: 1.5rem;
         }
-        .header {
-            background-color: #343a40;
-            color: white;
-            padding: 2rem 0;
-            margin-bottom: 2rem;
-            border-radius: 0.3rem;
+        
+        .nav-tabs .nav-link {
+            color: rgba(255, 255, 255, 0.7);
+            border: none;
+            padding: 12px 20px;
+            border-radius: 10px 10px 0 0;
+            margin-right: 5px;
+            transition: all 0.3s ease;
         }
+        
+        .nav-tabs .nav-link:hover {
+            color: var(--text-color);
+            background: rgba(255, 255, 255, 0.1);
+        }
+        
+        .nav-tabs .nav-link.active {
+            color: var(--text-color);
+            background: var(--glass-bg);
+            border: 1px solid var(--glass-border);
+            border-bottom: none;
+        }
+        
         .stat-card {
             text-align: center;
-            padding: 1rem;
+            padding: 1.5rem;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            transition: all 0.3s ease;
         }
+        
+        .stat-card:hover {
+            transform: translateY(-5px);
+            background: rgba(255, 255, 255, 0.15);
+        }
+        
         .stat-number {
-            font-size: 2rem;
+            font-size: 2.5rem;
             font-weight: bold;
-            color: #007bff;
+            color: var(--accent-color);
+            margin-bottom: 0.5rem;
         }
+        
         .stat-label {
             font-size: 0.9rem;
-            color: #6c757d;
+            color: rgba(255, 255, 255, 0.8);
+            text-transform: uppercase;
+            letter-spacing: 1px;
         }
-        .table-responsive {
-            max-height: 400px;
-            overflow-y: auto;
+        
+        .table {
+            color: var(--text-color);
         }
-        .cumulative-freq-bar {
-            height: 20px;
-            background-color: #007bff;
-            border-radius: 3px;
+        
+        .table th {
+            border-color: rgba(255, 255, 255, 0.1);
         }
-        .nav-tabs {
-            margin-bottom: 1rem;
+        
+        .table td {
+            border-color: rgba(255, 255, 255, 0.05);
+        }
+        
+        .category-card {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            padding: 15px;
+            margin-bottom: 15px;
+            transition: all 0.3s ease;
+        }
+        
+        .category-card:hover {
+            background: rgba(255, 255, 255, 0.2);
+            transform: translateY(-3px);
+        }
+        
+        .category-card h5 {
+            margin-bottom: 10px;
+            font-weight: 600;
+        }
+        
+        .category-card p {
+            font-size: 0.9rem;
+            opacity: 0.8;
+            margin-bottom: 15px;
+        }
+        
+        footer {
+            color: rgba(255, 255, 255, 0.6);
+            margin-top: 3rem;
         }
     </style>
 </head>
 <body>
     <div class="container">
-        <div class="header text-center">
+        <div class="header">
             <h1>Wikipedia Analysis Tool</h1>
-            <p class="lead">Analyze Wikipedia articles and categories</p>
+            <p class="lead">Analyze Wikipedia articles and categories with advanced word frequency analysis</p>
         </div>
 
-        <div class="row justify-content-center mb-4">
-            <div class="col-md-8">
-                <ul class="nav nav-tabs" id="analysisTabs" role="tablist">
-                    <li class="nav-item" role="presentation">
-                        <button class="nav-link active" id="article-tab" data-bs-toggle="tab" data-bs-target="#article" type="button" role="tab" aria-controls="article" aria-selected="true">Article Analysis</button>
-                    </li>
-                    <li class="nav-item" role="presentation">
-                        <button class="nav-link" id="category-tab" data-bs-toggle="tab" data-bs-target="#category" type="button" role="tab" aria-controls="category" aria-selected="false">Category Analysis</button>
-                    </li>
-                </ul>
-                
-                <div class="tab-content" id="analysisTabsContent">
-                    <div class="tab-pane fade show active" id="article" role="tabpanel" aria-labelledby="article-tab">
-                        <div class="card">
-                            <div class="card-body">
-                                <form method="POST" action="/">
-                                    <div class="mb-3">
-                                        <label for="article_title" class="form-label">Article Title</label>
-                                        <input type="text" class="form-control" id="article_title" name="article_title" 
-                                               placeholder="e.g. Artificial intelligence" value="{{ article_title }}" required>
-                                    </div>
-                                    <div class="d-grid">
-                                        <button type="submit" class="btn btn-primary">Analyze Article</button>
-                                    </div>
-                                </form>
-                            </div>
-                        </div>
-                    </div>
+        <div class="row justify-content-center">
+            <div class="col-md-10">
+                <div class="glass-card">
+                    <ul class="nav nav-tabs" id="analysisTabs" role="tablist">
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link active" id="article-tab" data-bs-toggle="tab" data-bs-target="#article" type="button" role="tab" aria-controls="article" aria-selected="true">Article Analysis</button>
+                        </li>
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link" id="category-tab" data-bs-toggle="tab" data-bs-target="#category" type="button" role="tab" aria-controls="category" aria-selected="false">Category Analysis</button>
+                        </li>
+                    </ul>
                     
-                    <div class="tab-pane fade" id="category" role="tabpanel" aria-labelledby="category-tab">
-                        <div class="card">
-                            <div class="card-body">
-                                <form id="categoryForm" onsubmit="redirectToCategory(event)">
-                                    <div class="mb-3">
-                                        <label for="category_name" class="form-label">Category Name</label>
-                                        <input type="text" class="form-control" id="category_name" name="category_name" 
-                                               placeholder="e.g. Large_language_models" required>
-                                        <div class="form-text">Enter the category name without the "Category:" prefix</div>
+                    <div class="tab-content" id="analysisTabsContent">
+                        <div class="tab-pane fade show active" id="article" role="tabpanel" aria-labelledby="article-tab">
+                            <form method="POST" action="/">
+                                <div class="mb-4">
+                                    <label for="article_title" class="form-label">Article Title</label>
+                                    <input type="text" class="form-control" id="article_title" name="article_title" 
+                                           placeholder="e.g. Artificial intelligence" value="{{ article_title }}" required>
+                                    <div class="form-text text-light opacity-75">Enter the exact title of a Wikipedia article</div>
+                                </div>
+                                <div class="d-grid">
+                                    <button type="submit" class="btn btn-primary">Analyze Article</button>
+                                </div>
+                            </form>
+                        </div>
+                        
+                        <div class="tab-pane fade" id="category" role="tabpanel" aria-labelledby="category-tab">
+                            <!-- Category Search Form -->
+                            <form method="POST" action="/">
+                                <div class="mb-4">
+                                    <label for="category_search" class="form-label">Search for Categories</label>
+                                    <input type="text" class="form-control" id="category_search" name="category_search" 
+                                           placeholder="e.g. Physics, Animals, Technology" value="{{ category_search }}" required>
+                                    <div class="form-text text-light opacity-75">Enter keywords to find Wikipedia categories</div>
+                                </div>
+                                <div class="d-grid">
+                                    <button type="submit" class="btn btn-primary">Search Categories</button>
+                                </div>
+                            </form>
+                            
+                            <!-- Category Search Results -->
+                            {% if category_suggestions %}
+                            <div class="mt-4">
+                                <h4>Available Categories:</h4>
+                                <div class="row">
+                                    {% for category in category_suggestions %}
+                                    <div class="col-md-6 mb-3">
+                                        <div class="category-card">
+                                            <h5>{{ category.name }}</h5>
+                                            <p>{{ category.snippet|safe }}</p>
+                                            <a href="{{ category.url }}" class="btn btn-outline-light btn-sm">Analyze This Category</a>
+                                        </div>
                                     </div>
-                                    <div class="d-grid">
-                                        <button type="submit" class="btn btn-primary">Analyze Category</button>
+                                    {% endfor %}
+                                </div>
+                            </div>
+                            {% endif %}
+                            
+                            <!-- Direct Category Access -->
+                            <div class="mt-4">
+                                <h5>Popular Categories</h5>
+                                <div class="row">
+                                    <div class="col-md-3 mb-2">
+                                        <a href="/category/Physics" class="btn btn-outline-light btn-sm d-block">Physics</a>
                                     </div>
-                                </form>
+                                    <div class="col-md-3 mb-2">
+                                        <a href="/category/Biology" class="btn btn-outline-light btn-sm d-block">Biology</a>
+                                    </div>
+                                    <div class="col-md-3 mb-2">
+                                        <a href="/category/Computer_science" class="btn btn-outline-light btn-sm d-block">Computer Science</a>
+                                    </div>
+                                    <div class="col-md-3 mb-2">
+                                        <a href="/category/History" class="btn btn-outline-light btn-sm d-block">History</a>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -106,92 +274,106 @@
         </div>
 
         {% if error_message %}
-        <div class="alert alert-danger" role="alert">
-            {{ error_message }}
+        <div class="alert alert-warning glass-card" role="alert">
+            <h4 class="alert-heading">Oops!</h4>
+            <p>{{ error_message }}</p>
         </div>
         {% endif %}
 
         {% if analysis_results %}
-        <div class="card">
-            <div class="card-header bg-primary text-white">
-                <h3 class="mb-0">Analysis Results for "{{ analysis_results.title }}"</h3>
+        <div class="glass-card">
+            <h3 class="mb-4">Analysis Results for "{{ analysis_results.title }}"</h3>
+            
+            <div class="row mb-4">
+                <div class="col-md-4">
+                    <div class="stat-card">
+                        <div class="stat-number">{{ analysis_results.word_count }}</div>
+                        <div class="stat-label">WORDS</div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="stat-card">
+                        <div class="stat-number">{{ analysis_results.sentence_count }}</div>
+                        <div class="stat-label">SENTENCES</div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="stat-card">
+                        <div class="stat-number">{{ analysis_results.avg_word_length }}</div>
+                        <div class="stat-label">AVG WORD LENGTH</div>
+                    </div>
+                </div>
             </div>
-            <div class="card-body">
-                <div class="row mb-4">
-                    <div class="col-md-4">
-                        <div class="stat-card">
-                            <div class="stat-number">{{ analysis_results.word_count }}</div>
-                            <div class="stat-label">WORDS</div>
-                        </div>
-                    </div>
-                    <div class="col-md-4">
-                        <div class="stat-card">
-                            <div class="stat-number">{{ analysis_results.sentence_count }}</div>
-                            <div class="stat-label">SENTENCES</div>
-                        </div>
-                    </div>
-                    <div class="col-md-4">
-                        <div class="stat-card">
-                            <div class="stat-number">{{ analysis_results.avg_word_length }}</div>
-                            <div class="stat-label">AVG WORD LENGTH</div>
-                        </div>
-                    </div>
-                </div>
 
-                <h4>Most Common Words</h4>
-                <div class="mb-4">
-                    {% for word, count in analysis_results.common_words %}
-                    <div>{{ word }} ({{ count }})</div>
-                    {% endfor %}
-                </div>
-
-                {% if analysis_results.cumulative_freq %}
-                <h4>Cumulative Frequency Analysis</h4>
-                <div class="table-responsive mb-4">
-                    <table class="table table-striped">
-                        <thead>
-                            <tr>
-                                <th>Rank</th>
-                                <th>Word</th>
-                                <th>Count</th>
-                                <th>Frequency</th>
-                                <th>Cumulative Frequency</th>
-                                <th>Visualization</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {% for item in analysis_results.cumulative_freq %}
-                            <tr>
-                                <td>{{ loop.index }}</td>
-                                <td><strong>{{ item.word }}</strong></td>
-                                <td>{{ item.count }}</td>
-                                <td>{{ "%.4f"|format(item.frequency) }}</td>
-                                <td>{{ "%.4f"|format(item.cumulative_frequency) }}</td>
-                                <td>
-                                    <div class="cumulative-freq-bar" style="width: {{ item.cumulative_frequency * 100 }}%"></div>
-                                </td>
-                            </tr>
-                            {% endfor %}
-                        </tbody>
-                    </table>
-                </div>
-                {% endif %}
-
-                <h4>Article Excerpt</h4>
-                <div class="card">
-                    <div class="card-body">
-                        <p>{{ analysis_results.excerpt }}</p>
-                        <a href="{{ analysis_results.url }}" target="_blank" class="btn btn-sm btn-outline-primary">
-                            Read Full Article
-                        </a>
+            <h4>Most Common Words</h4>
+            <div class="row mb-4">
+                {% for word, count in analysis_results.common_words %}
+                <div class="col-md-3 mb-3">
+                    <div class="category-card text-center">
+                        <h5>{{ word }}</h5>
+                        <div class="stat-number">{{ count }}</div>
+                        <div class="stat-label">OCCURRENCES</div>
                     </div>
                 </div>
+                {% endfor %}
+            </div>
+
+            {% if analysis_results.cumulative_freq %}
+            <h4>Cumulative Frequency Analysis</h4>
+            <div class="table-responsive mb-4">
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>Rank</th>
+                            <th>Word</th>
+                            <th>Count</th>
+                            <th>Frequency</th>
+                            <th>Cumulative Frequency</th>
+                            <th>Visualization</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for item in analysis_results.cumulative_freq %}
+                        <tr>
+                            <td>{{ loop.index }}</td>
+                            <td>
+                                <strong>{{ item.word }}</strong>
+                                {% if item.variants|length > 1 %}
+                                <small class="d-block opacity-75">
+                                    Variants: 
+                                    {% for variant in item.variants %}
+                                        {% if variant != item.word %}
+                                            {{ variant }}{% if not loop.last %}, {% endif %}
+                                        {% endif %}
+                                    {% endfor %}
+                                </small>
+                                {% endif %}
+                            </td>
+                            <td>{{ item.count }}</td>
+                            <td>{{ "%.4f"|format(item.frequency) }}</td>
+                            <td>{{ "%.4f"|format(item.cumulative_frequency) }}</td>
+                            <td>
+                                <div style="height: 20px; background-color: var(--accent-color); border-radius: 3px; width: {{ item.cumulative_frequency * 100 }}%"></div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% endif %}
+
+            <h4>Article Excerpt</h4>
+            <div class="glass-card" style="background: rgba(255, 255, 255, 0.05);">
+                <p>{{ analysis_results.excerpt }}</p>
+                <a href="{{ analysis_results.url }}" target="_blank" class="btn btn-outline-light btn-sm">
+                    Read Full Article
+                </a>
             </div>
         </div>
         {% endif %}
     </div>
 
-    <footer class="mt-5 py-3 text-center text-muted">
+    <footer class="py-3 text-center">
         <div class="container">
             <p>Wikipedia Analysis Tool &copy; 2025</p>
         </div>
