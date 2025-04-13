@@ -21,19 +21,6 @@
             margin-bottom: 2rem;
             border-radius: 0.3rem;
         }
-        .word-cloud {
-            display: flex;
-            flex-wrap: wrap;
-            justify-content: center;
-            gap: 0.5rem;
-        }
-        .word-item {
-            background-color: #007bff;
-            color: white;
-            padding: 0.25rem 0.75rem;
-            border-radius: 1rem;
-            font-size: 0.9rem;
-        }
         .stat-card {
             text-align: center;
             padding: 1rem;
@@ -47,86 +34,161 @@
             font-size: 0.9rem;
             color: #6c757d;
         }
+        .table-responsive {
+            max-height: 400px;
+            overflow-y: auto;
+        }
+        .cumulative-freq-bar {
+            height: 20px;
+            background-color: #007bff;
+            border-radius: 3px;
+        }
+        .nav-tabs {
+            margin-bottom: 1rem;
+        }
     </style>
 </head>
 <body>
     <div class="container">
         <div class="header text-center">
             <h1>Wikipedia Analysis Tool</h1>
-            <p class="lead">Enter a Wikipedia article title to analyze its content</p>
+            <p class="lead">Analyze Wikipedia articles and categories</p>
         </div>
 
-        <div class="row justify-content-center">
+        <div class="row justify-content-center mb-4">
             <div class="col-md-8">
-                <div class="card">
-                    <div class="card-body">
-                        <form method="POST" action="/">
-                            <div class="mb-3">
-                                <label for="article_title" class="form-label">Article Title</label>
-                                <input type="text" class="form-control" id="article_title" name="article_title" 
-                                       placeholder="e.g. Artificial intelligence" value="{{ article_title }}" required>
-                            </div>
-                            <div class="d-grid">
-                                <button type="submit" class="btn btn-primary">Analyze Article</button>
-                            </div>
-                        </form>
-                    </div>
-                </div>
-
-                {% if error_message %}
-                <div class="alert alert-danger" role="alert">
-                    {{ error_message }}
-                </div>
-                {% endif %}
-
-                {% if analysis_results %}
-                <div class="card">
-                    <div class="card-header bg-primary text-white">
-                        <h3 class="mb-0">Analysis Results for "{{ analysis_results.title }}"</h3>
-                    </div>
-                    <div class="card-body">
-                        <div class="row mb-4">
-                            <div class="col-md-4">
-                                <div class="stat-card">
-                                    <div class="stat-number">{{ analysis_results.word_count }}</div>
-                                    <div class="stat-label">WORDS</div>
-                                </div>
-                            </div>
-                            <div class="col-md-4">
-                                <div class="stat-card">
-                                    <div class="stat-number">{{ analysis_results.sentence_count }}</div>
-                                    <div class="stat-label">SENTENCES</div>
-                                </div>
-                            </div>
-                            <div class="col-md-4">
-                                <div class="stat-card">
-                                    <div class="stat-number">{{ analysis_results.avg_word_length }}</div>
-                                    <div class="stat-label">AVG WORD LENGTH</div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <h4>Most Common Words</h4>
-                        <div class="word-cloud mb-4">
-                            {% for word, count in analysis_results.common_words %}
-                            <div class="word-item">{{ word }} ({{ count }})</div>
-                            {% endfor %}
-                        </div>
-
-                        <h4>Article Excerpt</h4>
+                <ul class="nav nav-tabs" id="analysisTabs" role="tablist">
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link active" id="article-tab" data-bs-toggle="tab" data-bs-target="#article" type="button" role="tab" aria-controls="article" aria-selected="true">Article Analysis</button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link" id="category-tab" data-bs-toggle="tab" data-bs-target="#category" type="button" role="tab" aria-controls="category" aria-selected="false">Category Analysis</button>
+                    </li>
+                </ul>
+                
+                <div class="tab-content" id="analysisTabsContent">
+                    <div class="tab-pane fade show active" id="article" role="tabpanel" aria-labelledby="article-tab">
                         <div class="card">
                             <div class="card-body">
-                                <p>{{ analysis_results.excerpt }}</p>
-                                <a href="{{ analysis_results.url }}" target="_blank" class="btn btn-sm btn-outline-primary">
-                                    Read Full Article
-                                </a>
+                                <form method="POST" action="/">
+                                    <div class="mb-3">
+                                        <label for="article_title" class="form-label">Article Title</label>
+                                        <input type="text" class="form-control" id="article_title" name="article_title" 
+                                               placeholder="e.g. Artificial intelligence" value="{{ article_title }}" required>
+                                    </div>
+                                    <div class="d-grid">
+                                        <button type="submit" class="btn btn-primary">Analyze Article</button>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="tab-pane fade" id="category" role="tabpanel" aria-labelledby="category-tab">
+                        <div class="card">
+                            <div class="card-body">
+                                <form id="categoryForm" onsubmit="redirectToCategory(event)">
+                                    <div class="mb-3">
+                                        <label for="category_name" class="form-label">Category Name</label>
+                                        <input type="text" class="form-control" id="category_name" name="category_name" 
+                                               placeholder="e.g. Large_language_models" required>
+                                        <div class="form-text">Enter the category name without the "Category:" prefix</div>
+                                    </div>
+                                    <div class="d-grid">
+                                        <button type="submit" class="btn btn-primary">Analyze Category</button>
+                                    </div>
+                                </form>
                             </div>
                         </div>
                     </div>
                 </div>
-                {% endif %}
             </div>
         </div>
+
+        {% if error_message %}
+        <div class="alert alert-danger" role="alert">
+            {{ error_message }}
+        </div>
+        {% endif %}
+
+        {% if analysis_results %}
+        <div class="card">
+            <div class="card-header bg-primary text-white">
+                <h3 class="mb-0">Analysis Results for "{{ analysis_results.title }}"</h3>
+            </div>
+            <div class="card-body">
+                <div class="row mb-4">
+                    <div class="col-md-4">
+                        <div class="stat-card">
+                            <div class="stat-number">{{ analysis_results.word_count }}</div>
+                            <div class="stat-label">WORDS</div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="stat-card">
+                            <div class="stat-number">{{ analysis_results.sentence_count }}</div>
+                            <div class="stat-label">SENTENCES</div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="stat-card">
+                            <div class="stat-number">{{ analysis_results.avg_word_length }}</div>
+                            <div class="stat-label">AVG WORD LENGTH</div>
+                        </div>
+                    </div>
+                </div>
+
+                <h4>Most Common Words</h4>
+                <div class="mb-4">
+                    {% for word, count in analysis_results.common_words %}
+                    <div>{{ word }} ({{ count }})</div>
+                    {% endfor %}
+                </div>
+
+                {% if analysis_results.cumulative_freq %}
+                <h4>Cumulative Frequency Analysis</h4>
+                <div class="table-responsive mb-4">
+                    <table class="table table-striped">
+                        <thead>
+                            <tr>
+                                <th>Rank</th>
+                                <th>Word</th>
+                                <th>Count</th>
+                                <th>Frequency</th>
+                                <th>Cumulative Frequency</th>
+                                <th>Visualization</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for item in analysis_results.cumulative_freq %}
+                            <tr>
+                                <td>{{ loop.index }}</td>
+                                <td><strong>{{ item.word }}</strong></td>
+                                <td>{{ item.count }}</td>
+                                <td>{{ "%.4f"|format(item.frequency) }}</td>
+                                <td>{{ "%.4f"|format(item.cumulative_frequency) }}</td>
+                                <td>
+                                    <div class="cumulative-freq-bar" style="width: {{ item.cumulative_frequency * 100 }}%"></div>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% endif %}
+
+                <h4>Article Excerpt</h4>
+                <div class="card">
+                    <div class="card-body">
+                        <p>{{ analysis_results.excerpt }}</p>
+                        <a href="{{ analysis_results.url }}" target="_blank" class="btn btn-sm btn-outline-primary">
+                            Read Full Article
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endif %}
     </div>
 
     <footer class="mt-5 py-3 text-center text-muted">
@@ -134,6 +196,16 @@
             <p>Wikipedia Analysis Tool &copy; 2025</p>
         </div>
     </footer>
+
+    <script>
+        function redirectToCategory(event) {
+            event.preventDefault();
+            const categoryName = document.getElementById('category_name').value.trim();
+            if (categoryName) {
+                window.location.href = '/category/' + encodeURIComponent(categoryName);
+            }
+        }
+    </script>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
 </body>

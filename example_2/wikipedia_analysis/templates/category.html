@@ -1,0 +1,377 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Wikipedia Category Analysis - {{ category_name }}</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        :root {
+            --word-cloud-color-1: #007bff;
+            --word-cloud-color-2: #6610f2;
+            --word-cloud-color-3: #6f42c1;
+            --word-cloud-color-4: #e83e8c;
+            --word-cloud-color-5: #fd7e14;
+        }
+        
+        body {
+            background-color: #f8f9fa;
+            padding-top: 2rem;
+        }
+        .card {
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            margin-bottom: 1.5rem;
+        }
+        .header {
+            background-color: #343a40;
+            color: white;
+            padding: 2rem 0;
+            margin-bottom: 2rem;
+            border-radius: 0.3rem;
+        }
+        .word-item {
+            background-color: #007bff;
+            color: white;
+            padding: 0.25rem 0.75rem;
+            border-radius: 1rem;
+            font-size: 0.9rem;
+            margin: 0.25rem;
+            display: inline-block;
+        }
+        .table-responsive {
+            max-height: 500px;
+            overflow-y: auto;
+        }
+        .cumulative-freq-bar {
+            height: 20px;
+            background-color: #007bff;
+            border-radius: 3px;
+        }
+        
+        /* Word Cloud Styles */
+        .word-cloud-container {
+            min-height: 300px;
+            background-color: #f8f9fa;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+        
+        .word-cloud-word {
+            display: inline-block;
+            margin: 5px;
+            transition: all 0.5s ease;
+        }
+        
+        .color-palette-option {
+            width: 25px;
+            height: 25px;
+            display: inline-block;
+            margin-right: 10px;
+            border-radius: 50%;
+            cursor: pointer;
+            border: 2px solid transparent;
+        }
+        
+        .color-palette-option.active {
+            border-color: #343a40;
+        }
+        
+        .controls-container {
+            margin-bottom: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header text-center">
+            <h1>Category Analysis: {{ category_name }}</h1>
+            <p class="lead">Cumulative frequency analysis of words across articles in this category</p>
+        </div>
+
+        <div class="row">
+            <div class="col-md-12">
+                <div class="card">
+                    <div class="card-header bg-primary text-white">
+                        <h3 class="mb-0">Word Cloud Visualization</h3>
+                    </div>
+                    <div class="card-body">
+                        <div class="controls-container">
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <label class="form-label">Color Palette:</label>
+                                    <div class="color-palettes">
+                                        <span class="color-palette-option active" data-palette="default" style="background-color: #007bff;"></span>
+                                        <span class="color-palette-option" data-palette="sunset" style="background-color: #fd7e14;"></span>
+                                        <span class="color-palette-option" data-palette="forest" style="background-color: #28a745;"></span>
+                                        <span class="color-palette-option" data-palette="berry" style="background-color: #e83e8c;"></span>
+                                        <span class="color-palette-option" data-palette="ocean" style="background-color: #17a2b8;"></span>
+                                    </div>
+                                </div>
+                                <div class="col-md-6 text-end">
+                                    <button id="generate-cloud" class="btn btn-primary">Generate Word Cloud</button>
+                                </div>
+                            </div>
+                        </div>
+                        <div id="word-cloud" class="word-cloud-container text-center">
+                            <p class="text-muted">Click "Generate Word Cloud" to visualize the most frequent words</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col-md-12">
+                <div class="card">
+                    <div class="card-header bg-primary text-white">
+                        <h3 class="mb-0">Cumulative Frequency Analysis</h3>
+                    </div>
+                    <div class="card-body">
+                        <canvas id="cumulativeFreqChart" height="300"></canvas>
+                        
+                        <div class="table-responsive mt-4">
+                            <table class="table table-striped">
+                                <thead>
+                                    <tr>
+                                        <th>Rank</th>
+                                        <th>Word</th>
+                                        <th>Count</th>
+                                        <th>Frequency</th>
+                                        <th>Cumulative Frequency</th>
+                                        <th>Visualization</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for item in cumulative_freq %}
+                                    <tr>
+                                        <td>{{ loop.index }}</td>
+                                        <td><strong>{{ item.word }}</strong></td>
+                                        <td>{{ item.count }}</td>
+                                        <td>{{ "%.4f"|format(item.frequency) }}</td>
+                                        <td>{{ "%.4f"|format(item.cumulative_frequency) }}</td>
+                                        <td>
+                                            <div class="cumulative-freq-bar" style="width: {{ item.cumulative_frequency * 100 }}%"></div>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col-md-12">
+                <div class="card">
+                    <div class="card-header bg-primary text-white">
+                        <h3 class="mb-0">Articles in Category</h3>
+                    </div>
+                    <div class="card-body">
+                        <ul class="list-group">
+                            {% for article in articles %}
+                            <li class="list-group-item">
+                                <a href="https://en.wikipedia.org/wiki/{{ article|replace(' ', '_') }}" target="_blank">
+                                    {{ article }}
+                                </a>
+                            </li>
+                            {% endfor %}
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="text-center mt-4 mb-5">
+            <a href="/" class="btn btn-primary">Back to Home</a>
+        </div>
+    </div>
+
+    <footer class="mt-5 py-3 text-center text-muted">
+        <div class="container">
+            <p>Wikipedia Analysis Tool &copy; 2025</p>
+        </div>
+    </footer>
+
+    <script>
+        // Create cumulative frequency chart
+        const ctx = document.getElementById('cumulativeFreqChart').getContext('2d');
+        const labels = [];
+        const dataPoints = [];
+        
+        {% for item in cumulative_freq %}
+            {% if loop.index <= 50 %}
+                labels.push("{{ item.word }}");
+                dataPoints.push({{ item.cumulative_frequency }});
+            {% endif %}
+        {% endfor %}
+        
+        const cumulativeFreqChart = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: 'Cumulative Frequency',
+                    data: dataPoints,
+                    borderColor: 'rgba(0, 123, 255, 1)',
+                    backgroundColor: 'rgba(0, 123, 255, 0.1)',
+                    borderWidth: 2,
+                    fill: true,
+                    tension: 0.1
+                }]
+            },
+            options: {
+                responsive: true,
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        max: 1,
+                        title: {
+                            display: true,
+                            text: 'Cumulative Frequency'
+                        }
+                    },
+                    x: {
+                        title: {
+                            display: true,
+                            text: 'Words (by frequency rank)'
+                        },
+                        ticks: {
+                            display: false
+                        }
+                    }
+                },
+                plugins: {
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                return `Word: ${context.label}, Cumulative Freq: ${context.raw.toFixed(4)}`;
+                            }
+                        }
+                    }
+                }
+            }
+        });
+    </script>
+    
+    <script>
+        // Word Cloud functionality
+        document.addEventListener('DOMContentLoaded', function() {
+            // Create word data array from server data
+            const wordData = [
+                {% for item in cumulative_freq %}
+                    {% if loop.index <= 50 %}
+                    {
+                        word: "{{ item.word }}",
+                        count: {{ item.count }},
+                        frequency: {{ item.frequency }},
+                        cumulative_frequency: {{ item.cumulative_frequency }}
+                    }{% if not loop.last %},{% endif %}
+                    {% endif %}
+                {% endfor %}
+            ];
+            
+            // Color palettes
+            const colorPalettes = {
+                default: [
+                    'var(--word-cloud-color-1)',
+                    'var(--word-cloud-color-2)',
+                    'var(--word-cloud-color-3)'
+                ],
+                sunset: [
+                    '#fd7e14',
+                    '#e74c3c',
+                    '#d35400'
+                ],
+                forest: [
+                    '#28a745',
+                    '#20c997',
+                    '#1e7e34'
+                ],
+                berry: [
+                    '#e83e8c',
+                    '#6f42c1',
+                    '#d6336c'
+                ],
+                ocean: [
+                    '#17a2b8',
+                    '#3498db',
+                    '#0062cc'
+                ]
+            };
+            
+            let currentPalette = 'default';
+            
+            // Handle palette selection
+            document.querySelectorAll('.color-palette-option').forEach(option => {
+                option.addEventListener('click', function() {
+                    // Remove active class from all options
+                    document.querySelectorAll('.color-palette-option').forEach(opt => {
+                        opt.classList.remove('active');
+                    });
+                    
+                    // Add active class to selected option
+                    this.classList.add('active');
+                    
+                    // Update current palette
+                    currentPalette = this.getAttribute('data-palette');
+                    
+                    // Update CSS variables based on palette
+                    const root = document.documentElement;
+                    const colors = colorPalettes[currentPalette];
+                    
+                    root.style.setProperty('--word-cloud-color-1', colors[0]);
+                    root.style.setProperty('--word-cloud-color-2', colors[1]);
+                    root.style.setProperty('--word-cloud-color-3', colors[2]);
+                });
+            });
+            
+            // Generate word cloud
+            document.getElementById('generate-cloud').addEventListener('click', function() {
+                const wordCloudContainer = document.getElementById('word-cloud');
+                
+                // Clear previous content
+                wordCloudContainer.innerHTML = '';
+                
+                // Get max frequency for scaling
+                const maxFreq = Math.max(...wordData.map(item => item.cumulative_frequency));
+                
+                // Generate word cloud
+                wordData.forEach((item, index) => {
+                    // Calculate font size based on frequency (between 1 and 5rem)
+                    const fontSize = 1 + (item.cumulative_frequency / maxFreq) * 4;
+                    
+                    // Create word element
+                    const wordElement = document.createElement('span');
+                    wordElement.className = 'word-cloud-word';
+                    wordElement.textContent = item.word;
+                    
+                    // Calculate color based on index
+                    const colorIndex = index % 3 + 1;
+                    
+                    // Apply styles with transitions
+                    wordElement.style.fontSize = `${fontSize}rem`;
+                    wordElement.style.color = `var(--word-cloud-color-${colorIndex})`;
+                    wordElement.style.fontWeight = fontSize > 3 ? 'bold' : 'normal';
+                    wordElement.style.opacity = '0';
+                    wordElement.style.transform = 'scale(0.5)';
+                    
+                    // Add to container
+                    wordCloudContainer.appendChild(wordElement);
+                    
+                    // Trigger animation with slight delay based on index
+                    setTimeout(() => {
+                        wordElement.style.opacity = '1';
+                        wordElement.style.transform = 'scale(1)';
+                    }, index * 20);
+                });
+            });
+        });
+    </script>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
