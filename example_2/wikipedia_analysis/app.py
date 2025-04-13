@@ -65,10 +65,16 @@ def analyze_category(category_name):
                               error_message="No articles found in this category.")
         
         all_words = []
+        processed_articles = []
         
         for article in category_articles[:10]:  # Limit to 10 articles to avoid overloading
             try:
                 article_analysis = analyze_wikipedia_article(article)
+                processed_articles.append({
+                    'title': article,
+                    'url': f"https://en.wikipedia.org/wiki/{article.replace(' ', '_')}",
+                    'word_count': article_analysis['word_count']
+                })
                 # Extract words and their frequencies
                 for word, count in article_analysis['word_freq'].items():
                     all_words.extend([word] * count)
@@ -95,22 +101,40 @@ def analyze_category(category_name):
         cumulative_freq = []
         running_sum = 0
         
+        # Create a stem map for all words
+        stem_to_word_map = {}
+        for word in all_words:
+            stem = stemmer.stem(word)
+            if stem in stem_to_word_map:
+                stem_to_word_map[stem].append(word)
+            else:
+                stem_to_word_map[stem] = [word]
+        
         for word, count in sorted_words:
             freq = count / total_words
             running_sum += freq
+            
+            # Get the stem for this word to find variants
+            stem = stemmer.stem(word)
+            variants = list(set(stem_to_word_map.get(stem, [word])))
+            
             cumulative_freq.append({
                 'word': word,
                 'count': count,
                 'frequency': freq,
-                'cumulative_frequency': running_sum
+                'cumulative_frequency': running_sum,
+                'variants': variants  # Ensure this is a serializable list
             })
         
         return render_template('category.html',
                               category_name=category_name,
                               cumulative_freq=cumulative_freq[:100],  # Top 100 words
-                              articles=category_articles[:20])  # Show up to 20 articles
+                              articles=processed_articles)  # Show processed articles
     
     except Exception as e:
+        print(f"Error in analyze_category: {str(e)}")
+        import traceback
+        traceback.print_exc()
         return render_template('category.html',
                           category_name=category_name,
                           cumulative_freq=[],
@@ -244,12 +268,17 @@ def analyze_wikipedia_article(title):
     for word, count in sorted(word_freq.items(), key=lambda x: x[1], reverse=True)[:50]:
         freq = count / total_words
         running_sum += freq
+        
+        # Get the stem for this word to find variants
+        stem = stemmer.stem(word)
+        variants = list(set(stem_to_word_map.get(stem, [word])))
+        
         cumulative_freq.append({
             'word': word,
             'count': count,
             'frequency': freq,
             'cumulative_frequency': running_sum,
-            'variants': list(set(stem_to_word_map[stemmer.stem(word)]))  # Include word variants
+            'variants': variants  # Make sure this is a serializable list
         })
 
     return {

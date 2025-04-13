@@ -164,6 +164,13 @@
             transform: translateY(-2px);
             box-shadow: 0 4px 8px rgba(0,0,0,0.1);
         }
+        
+        .article-card {
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: var(--card-shadow);
+        }
     </style>
 </head>
 <body>
@@ -324,13 +331,12 @@
                             <div class="tab-pane fade" id="articles" role="tabpanel" aria-labelledby="articles-tab">
                                 <div class="row mt-3">
                                     {% for article in articles %}
-                                    <div class="col-md-4 mb-3">
-                                        <div class="card h-100">
-                                            <div class="card-body">
-                                                <h5 class="card-title">{{ article }}</h5>
-                                                <a href="https://en.wikipedia.org/wiki/{{ article|replace(' ', '_') }}" target="_blank" class="btn btn-sm btn-outline-primary mt-2">
-                                                    Read on Wikipedia
-                                                </a>
+                                    <div class="col-md-6 mb-3">
+                                        <div class="article-card">
+                                            <h5>{{ article.title }}</h5>
+                                            <div class="d-flex justify-content-between align-items-center">
+                                                <span class="badge bg-primary">{{ article.word_count }} words</span>
+                                                <a href="{{ article.url }}" target="_blank" class="btn btn-outline-light btn-sm">Read Article</a>
                                             </div>
                                         </div>
                                     </div>

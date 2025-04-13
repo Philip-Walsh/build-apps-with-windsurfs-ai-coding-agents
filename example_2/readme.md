@@ -2,6 +2,8 @@
 
 A simple **Flask** web application that fetches and analyzes Wikipedia articles using the **MediaWiki API**. The app provides key stats like word count, sentence count, average word length, and the most common words in a given article.
 
+![Word Map](./image.png)
+
 ---
 
 ## 📦 Features
@@ -93,7 +95,6 @@ wikipedia_analysis/
 This project was originally intended to be a **Rust CLI app**, but was implemented as a **Flask web app** instead. If you'd like help rewriting this in Rust as a command-line tool, feel free to open an issue or contribute!
 
 ### Starting Prompt
+
 Write a rust app that takes in a wikipedia category as a command line argument and outputs the cumulative frequency of non category and then run it on 'Large_languace_models' Use the MediaWiki API
-use clean code 
-
-
+use clean code
