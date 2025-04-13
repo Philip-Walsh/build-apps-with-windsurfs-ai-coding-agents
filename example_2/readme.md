@@ -2,7 +2,8 @@
 
 A simple **Flask** web application that fetches and analyzes Wikipedia articles using the **MediaWiki API**. The app provides key stats like word count, sentence count, average word length, and the most common words in a given article.
 
-![Word Map](./image.png)
+![Article Analysis](./image_article.png)
+![Word Map](./image_category.png)
 
 ---
 
