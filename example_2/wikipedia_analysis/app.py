@@ -32,6 +32,14 @@ def index():
 def analyze_category(category_name):
     try:
         category_articles = get_category_articles(category_name)
+        
+        if not category_articles:
+            return render_template('category.html',
+                              category_name=category_name,
+                              cumulative_freq=[],
+                              articles=[],
+                              error_message="No articles found in this category.")
+        
         all_words = []
         
         for article in category_articles[:10]:  # Limit to 10 articles to avoid overloading
@@ -43,6 +51,14 @@ def analyze_category(category_name):
             except Exception as e:
                 print(f"Error analyzing article {article}: {str(e)}")
                 continue
+        
+        # Check if we have any words to analyze
+        if not all_words:
+            return render_template('category.html',
+                              category_name=category_name,
+                              cumulative_freq=[],
+                              articles=category_articles[:20],
+                              error_message="Could not extract word data from articles in this category.")
         
         # Calculate cumulative frequency
         word_counts = Counter(all_words)
@@ -71,7 +87,11 @@ def analyze_category(category_name):
                               articles=category_articles[:20])  # Show up to 20 articles
     
     except Exception as e:
-        return jsonify({'error': str(e)}), 500
+        return render_template('category.html',
+                          category_name=category_name,
+                          cumulative_freq=[],
+                          articles=[],
+                          error_message=f"Error analyzing category: {str(e)}")
 
 
 def get_category_articles(category_name):

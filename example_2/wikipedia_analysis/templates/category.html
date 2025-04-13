@@ -13,23 +13,32 @@
             --word-cloud-color-3: #6f42c1;
             --word-cloud-color-4: #e83e8c;
             --word-cloud-color-5: #fd7e14;
+            --dashboard-bg: #f8f9fa;
+            --card-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+            --header-bg: #343a40;
         }
         
         body {
-            background-color: #f8f9fa;
+            background-color: var(--dashboard-bg);
             padding-top: 2rem;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
         }
+        
         .card {
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            box-shadow: var(--card-shadow);
             margin-bottom: 1.5rem;
+            border: none;
+            border-radius: 10px;
         }
+        
         .header {
-            background-color: #343a40;
+            background-color: var(--header-bg);
             color: white;
             padding: 2rem 0;
             margin-bottom: 2rem;
-            border-radius: 0.3rem;
+            border-radius: 0.5rem;
         }
+        
         .word-item {
             background-color: #007bff;
             color: white;
@@ -39,10 +48,12 @@
             margin: 0.25rem;
             display: inline-block;
         }
+        
         .table-responsive {
             max-height: 500px;
             overflow-y: auto;
         }
+        
         .cumulative-freq-bar {
             height: 20px;
             background-color: #007bff;
@@ -51,35 +62,107 @@
         
         /* Word Cloud Styles */
         .word-cloud-container {
-            min-height: 300px;
-            background-color: #f8f9fa;
-            border-radius: 8px;
-            padding: 20px;
+            min-height: 400px;
+            background-color: #fff;
+            border-radius: 10px;
+            padding: 30px;
             margin-bottom: 20px;
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            align-items: center;
         }
         
         .word-cloud-word {
             display: inline-block;
-            margin: 5px;
-            transition: all 0.5s ease;
+            margin: 8px;
+            transition: all 0.6s cubic-bezier(0.165, 0.84, 0.44, 1);
+            cursor: pointer;
+            padding: 5px;
+        }
+        
+        .word-cloud-word:hover {
+            transform: scale(1.1);
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.2);
         }
         
         .color-palette-option {
-            width: 25px;
-            height: 25px;
+            width: 30px;
+            height: 30px;
             display: inline-block;
             margin-right: 10px;
             border-radius: 50%;
             cursor: pointer;
             border: 2px solid transparent;
+            transition: transform 0.3s ease;
+        }
+        
+        .color-palette-option:hover {
+            transform: scale(1.2);
         }
         
         .color-palette-option.active {
             border-color: #343a40;
+            transform: scale(1.2);
         }
         
         .controls-container {
-            margin-bottom: 20px;
+            margin-bottom: 30px;
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: var(--card-shadow);
+        }
+        
+        .dashboard-stat {
+            background: white;
+            border-radius: 10px;
+            padding: 20px;
+            text-align: center;
+            box-shadow: var(--card-shadow);
+            transition: transform 0.3s ease;
+        }
+        
+        .dashboard-stat:hover {
+            transform: translateY(-5px);
+        }
+        
+        .stat-icon {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            color: var(--word-cloud-color-1);
+        }
+        
+        .stat-value {
+            font-size: 2rem;
+            font-weight: bold;
+            margin-bottom: 5px;
+            color: #333;
+        }
+        
+        .stat-label {
+            font-size: 0.9rem;
+            color: #6c757d;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        
+        .card-header {
+            border-top-left-radius: 10px !important;
+            border-top-right-radius: 10px !important;
+            padding: 15px 20px;
+        }
+        
+        .generate-btn {
+            padding: 10px 25px;
+            font-weight: 600;
+            letter-spacing: 0.5px;
+            transition: all 0.3s ease;
+        }
+        
+        .generate-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
         }
     </style>
 </head>
@@ -87,20 +170,62 @@
     <div class="container">
         <div class="header text-center">
             <h1>Category Analysis: {{ category_name }}</h1>
-            <p class="lead">Cumulative frequency analysis of words across articles in this category</p>
+            <p class="lead">Explore word frequency patterns across articles in this category</p>
         </div>
 
-        <div class="row">
+        {% if error_message %}
+        <div class="alert alert-warning" role="alert">
+            <h4 class="alert-heading">Oops!</h4>
+            <p>{{ error_message }}</p>
+            <hr>
+            <p class="mb-0">Try searching for a different category or check if the category name is spelled correctly.</p>
+        </div>
+        {% endif %}
+
+        <!-- Dashboard Stats Row -->
+        <div class="row mb-4">
+            <div class="col-md-3">
+                <div class="dashboard-stat">
+                    <div class="stat-icon">📊</div>
+                    <div class="stat-value">{{ articles|length }}</div>
+                    <div class="stat-label">Total Articles</div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="dashboard-stat">
+                    <div class="stat-icon">📝</div>
+                    <div class="stat-value">{{ cumulative_freq|length }}</div>
+                    <div class="stat-label">Unique Words</div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="dashboard-stat">
+                    <div class="stat-icon">🔤</div>
+                    <div class="stat-value">{% if cumulative_freq and cumulative_freq|length > 0 %}{{ cumulative_freq[0].word }}{% else %}N/A{% endif %}</div>
+                    <div class="stat-label">Most Common Word</div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="dashboard-stat">
+                    <div class="stat-icon">📈</div>
+                    <div class="stat-value">{% if cumulative_freq and cumulative_freq|length > 0 %}{{ "%.1f"|format(cumulative_freq[0].frequency * 100) }}%{% else %}N/A{% endif %}</div>
+                    <div class="stat-label">Top Word Frequency</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Word Cloud Section - Now Bigger and More Prominent -->
+        <div class="row mb-4">
             <div class="col-md-12">
                 <div class="card">
                     <div class="card-header bg-primary text-white">
-                        <h3 class="mb-0">Word Cloud Visualization</h3>
+                        <h3 class="mb-0">Interactive Word Cloud</h3>
                     </div>
                     <div class="card-body">
                         <div class="controls-container">
-                            <div class="row">
+                            <div class="row align-items-center">
                                 <div class="col-md-6">
-                                    <label class="form-label">Color Palette:</label>
+                                    <label class="form-label fw-bold">Color Theme:</label>
                                     <div class="color-palettes">
                                         <span class="color-palette-option active" data-palette="default" style="background-color: #007bff;"></span>
                                         <span class="color-palette-option" data-palette="sunset" style="background-color: #fd7e14;"></span>
@@ -110,83 +235,111 @@
                                     </div>
                                 </div>
                                 <div class="col-md-6 text-end">
-                                    <button id="generate-cloud" class="btn btn-primary">Generate Word Cloud</button>
+                                    <button id="generate-cloud" class="btn btn-primary btn-lg generate-btn">
+                                        <span>Generate Word Cloud</span>
+                                    </button>
                                 </div>
                             </div>
                         </div>
                         <div id="word-cloud" class="word-cloud-container text-center">
-                            <p class="text-muted">Click "Generate Word Cloud" to visualize the most frequent words</p>
+                            <div class="text-center p-5">
+                                <h4 class="text-muted mb-3">Visualize Word Frequency</h4>
+                                <p class="text-muted">Click "Generate Word Cloud" to create an interactive visualization of the most frequent words in this category</p>
+                                <div class="mt-4">
+                                    <svg width="100" height="100" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                        <path d="M12 16V12M12 8H12.01M22 12C22 17.5228 17.5228 22 12 22C6.47715 22 2 17.5228 2 12C2 6.47715 6.47715 2 12 2C17.5228 2 22 6.47715 22 12Z" stroke="#6c757d" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                                    </svg>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
             </div>
         </div>
 
+        <!-- Dashboard Content in Tabs -->
         <div class="row">
             <div class="col-md-12">
                 <div class="card">
                     <div class="card-header bg-primary text-white">
-                        <h3 class="mb-0">Cumulative Frequency Analysis</h3>
-                    </div>
-                    <div class="card-body">
-                        <canvas id="cumulativeFreqChart" height="300"></canvas>
-                        
-                        <div class="table-responsive mt-4">
-                            <table class="table table-striped">
-                                <thead>
-                                    <tr>
-                                        <th>Rank</th>
-                                        <th>Word</th>
-                                        <th>Count</th>
-                                        <th>Frequency</th>
-                                        <th>Cumulative Frequency</th>
-                                        <th>Visualization</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    {% for item in cumulative_freq %}
-                                    <tr>
-                                        <td>{{ loop.index }}</td>
-                                        <td><strong>{{ item.word }}</strong></td>
-                                        <td>{{ item.count }}</td>
-                                        <td>{{ "%.4f"|format(item.frequency) }}</td>
-                                        <td>{{ "%.4f"|format(item.cumulative_frequency) }}</td>
-                                        <td>
-                                            <div class="cumulative-freq-bar" style="width: {{ item.cumulative_frequency * 100 }}%"></div>
-                                        </td>
-                                    </tr>
-                                    {% endfor %}
-                                </tbody>
-                            </table>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <div class="row">
-            <div class="col-md-12">
-                <div class="card">
-                    <div class="card-header bg-primary text-white">
-                        <h3 class="mb-0">Articles in Category</h3>
-                    </div>
-                    <div class="card-body">
-                        <ul class="list-group">
-                            {% for article in articles %}
-                            <li class="list-group-item">
-                                <a href="https://en.wikipedia.org/wiki/{{ article|replace(' ', '_') }}" target="_blank">
-                                    {{ article }}
-                                </a>
+                        <ul class="nav nav-tabs card-header-tabs" id="analysisTab" role="tablist">
+                            <li class="nav-item" role="presentation">
+                                <button class="nav-link active text-dark" id="frequency-tab" data-bs-toggle="tab" data-bs-target="#frequency" type="button" role="tab" aria-controls="frequency" aria-selected="true">Frequency Analysis</button>
                             </li>
-                            {% endfor %}
+                            <li class="nav-item" role="presentation">
+                                <button class="nav-link text-dark" id="articles-tab" data-bs-toggle="tab" data-bs-target="#articles" type="button" role="tab" aria-controls="articles" aria-selected="false">Articles</button>
+                            </li>
+                            <li class="nav-item" role="presentation">
+                                <button class="nav-link text-dark" id="chart-tab" data-bs-toggle="tab" data-bs-target="#chart" type="button" role="tab" aria-controls="chart" aria-selected="false">Chart View</button>
+                            </li>
                         </ul>
+                    </div>
+                    <div class="card-body">
+                        <div class="tab-content" id="analysisTabContent">
+                            <!-- Frequency Analysis Tab -->
+                            <div class="tab-pane fade show active" id="frequency" role="tabpanel" aria-labelledby="frequency-tab">
+                                <div class="table-responsive mt-2">
+                                    <table class="table table-striped">
+                                        <thead>
+                                            <tr>
+                                                <th>Rank</th>
+                                                <th>Word</th>
+                                                <th>Count</th>
+                                                <th>Frequency</th>
+                                                <th>Cumulative Frequency</th>
+                                                <th>Visualization</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {% for item in cumulative_freq %}
+                                            <tr>
+                                                <td>{{ loop.index }}</td>
+                                                <td><strong>{{ item.word }}</strong></td>
+                                                <td>{{ item.count }}</td>
+                                                <td>{{ "%.4f"|format(item.frequency) }}</td>
+                                                <td>{{ "%.4f"|format(item.cumulative_frequency) }}</td>
+                                                <td>
+                                                    <div class="cumulative-freq-bar" style="width: {{ item.cumulative_frequency * 100 }}%"></div>
+                                                </td>
+                                            </tr>
+                                            {% endfor %}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                            
+                            <!-- Articles Tab -->
+                            <div class="tab-pane fade" id="articles" role="tabpanel" aria-labelledby="articles-tab">
+                                <div class="row mt-3">
+                                    {% for article in articles %}
+                                    <div class="col-md-4 mb-3">
+                                        <div class="card h-100">
+                                            <div class="card-body">
+                                                <h5 class="card-title">{{ article }}</h5>
+                                                <a href="https://en.wikipedia.org/wiki/{{ article|replace(' ', '_') }}" target="_blank" class="btn btn-sm btn-outline-primary mt-2">
+                                                    Read on Wikipedia
+                                                </a>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    {% endfor %}
+                                </div>
+                            </div>
+                            
+                            <!-- Chart View Tab -->
+                            <div class="tab-pane fade" id="chart" role="tabpanel" aria-labelledby="chart-tab">
+                                <div class="mt-3">
+                                    <canvas id="cumulativeFreqChart" height="300"></canvas>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
         </div>
         
         <div class="text-center mt-4 mb-5">
-            <a href="/" class="btn btn-primary">Back to Home</a>
+            <a href="/" class="btn btn-primary btn-lg">Back to Home</a>
         </div>
     </div>
 
@@ -261,18 +414,18 @@
         // Word Cloud functionality
         document.addEventListener('DOMContentLoaded', function() {
             // Create word data array from server data
-            const wordData = [
-                {% for item in cumulative_freq %}
-                    {% if loop.index <= 50 %}
-                    {
+            const wordData = [];
+            
+            {% for item in cumulative_freq %}
+                {% if loop.index <= 50 %}
+                    wordData.push({
                         word: "{{ item.word }}",
                         count: {{ item.count }},
                         frequency: {{ item.frequency }},
                         cumulative_frequency: {{ item.cumulative_frequency }}
-                    }{% if not loop.last %},{% endif %}
-                    {% endif %}
-                {% endfor %}
-            ];
+                    });
+                {% endif %}
+            {% endfor %}
             
             // Color palettes
             const colorPalettes = {
@@ -337,12 +490,12 @@
                 wordCloudContainer.innerHTML = '';
                 
                 // Get max frequency for scaling
-                const maxFreq = Math.max(...wordData.map(item => item.cumulative_frequency));
+                const maxFreq = Math.max(...wordData.map(item => item.frequency));
                 
                 // Generate word cloud
                 wordData.forEach((item, index) => {
                     // Calculate font size based on frequency (between 1 and 5rem)
-                    const fontSize = 1 + (item.cumulative_frequency / maxFreq) * 4;
+                    const fontSize = 1.2 + (item.frequency / maxFreq) * 4.5;
                     
                     // Create word element
                     const wordElement = document.createElement('span');
@@ -359,6 +512,9 @@
                     wordElement.style.opacity = '0';
                     wordElement.style.transform = 'scale(0.5)';
                     
+                    // Add tooltip with frequency info
+                    wordElement.title = `${item.word}: ${item.count} occurrences (${(item.frequency * 100).toFixed(2)}%)`;
+                    
                     // Add to container
                     wordCloudContainer.appendChild(wordElement);
                     
@@ -366,7 +522,7 @@
                     setTimeout(() => {
                         wordElement.style.opacity = '1';
                         wordElement.style.transform = 'scale(1)';
-                    }, index * 20);
+                    }, index * 30);
                 });
             });
         });
