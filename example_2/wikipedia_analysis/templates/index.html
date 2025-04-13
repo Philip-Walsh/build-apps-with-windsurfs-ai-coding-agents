@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Wikipedia Analysis Tool</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body {
+            background-color: #f8f9fa;
+            padding-top: 2rem;
+        }
+        .card {
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            margin-bottom: 1.5rem;
+        }
+        .header {
+            background-color: #343a40;
+            color: white;
+            padding: 2rem 0;
+            margin-bottom: 2rem;
+            border-radius: 0.3rem;
+        }
+        .word-cloud {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 0.5rem;
+        }
+        .word-item {
+            background-color: #007bff;
+            color: white;
+            padding: 0.25rem 0.75rem;
+            border-radius: 1rem;
+            font-size: 0.9rem;
+        }
+        .stat-card {
+            text-align: center;
+            padding: 1rem;
+        }
+        .stat-number {
+            font-size: 2rem;
+            font-weight: bold;
+            color: #007bff;
+        }
+        .stat-label {
+            font-size: 0.9rem;
+            color: #6c757d;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header text-center">
+            <h1>Wikipedia Analysis Tool</h1>
+            <p class="lead">Enter a Wikipedia article title to analyze its content</p>
+        </div>
+
+        <div class="row justify-content-center">
+            <div class="col-md-8">
+                <div class="card">
+                    <div class="card-body">
+                        <form method="POST" action="/">
+                            <div class="mb-3">
+                                <label for="article_title" class="form-label">Article Title</label>
+                                <input type="text" class="form-control" id="article_title" name="article_title" 
+                                       placeholder="e.g. Artificial intelligence" value="{{ article_title }}" required>
+                            </div>
+                            <div class="d-grid">
+                                <button type="submit" class="btn btn-primary">Analyze Article</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+
+                {% if error_message %}
+                <div class="alert alert-danger" role="alert">
+                    {{ error_message }}
+                </div>
+                {% endif %}
+
+                {% if analysis_results %}
+                <div class="card">
+                    <div class="card-header bg-primary text-white">
+                        <h3 class="mb-0">Analysis Results for "{{ analysis_results.title }}"</h3>
+                    </div>
+                    <div class="card-body">
+                        <div class="row mb-4">
+                            <div class="col-md-4">
+                                <div class="stat-card">
+                                    <div class="stat-number">{{ analysis_results.word_count }}</div>
+                                    <div class="stat-label">WORDS</div>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="stat-card">
+                                    <div class="stat-number">{{ analysis_results.sentence_count }}</div>
+                                    <div class="stat-label">SENTENCES</div>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="stat-card">
+                                    <div class="stat-number">{{ analysis_results.avg_word_length }}</div>
+                                    <div class="stat-label">AVG WORD LENGTH</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <h4>Most Common Words</h4>
+                        <div class="word-cloud mb-4">
+                            {% for word, count in analysis_results.common_words %}
+                            <div class="word-item">{{ word }} ({{ count }})</div>
+                            {% endfor %}
+                        </div>
+
+                        <h4>Article Excerpt</h4>
+                        <div class="card">
+                            <div class="card-body">
+                                <p>{{ analysis_results.excerpt }}</p>
+                                <a href="{{ analysis_results.url }}" target="_blank" class="btn btn-sm btn-outline-primary">
+                                    Read Full Article
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <footer class="mt-5 py-3 text-center text-muted">
+        <div class="container">
+            <p>Wikipedia Analysis Tool &copy; 2025</p>
+        </div>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

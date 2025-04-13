@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Pick A Card</title>
+    <link rel="stylesheet" href="./styles.css" />
+    <script src="./script.js" defer></script>
+  </head>
+  <body>
+    <header>
+      <h1>Royal Deck</h1>
+      <nav>
+        <button id="shuffle-btn">Shuffle</button>
+        <button id="spread-btn">Fan Cards</button>
+        <button id="game-btn">Play High-Low</button>
+      </nav>
+    </header>
+    
+    <main>
+      <section class="deck-container">
+        <div class="table-decoration left"></div>
+        <article id="deck"></article>
+        <div id="game-controls" class="game-controls">
+          <div class="score-display">Score: <span id="score">0</span></div>
+          <div class="current-card">
+            <div id="current-card-display"></div>
+          </div>
+          <div class="game-buttons">
+            <button id="higher-btn" class="game-btn">Higher</button>
+            <button id="lower-btn" class="game-btn">Lower</button>
+          </div>
+          <div id="game-message" class="game-message"></div>
+        </div>
+        <div class="table-decoration right"></div>
+      </section>
+    </main>
+    
+    <footer>
+      <p>Classic Card Collection &copy; 2025</p>
+    </footer>
+  </body>
+</html>
